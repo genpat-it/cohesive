@@ -301,14 +301,9 @@ Configure at least two nodes. The first node is the `worker` node and the second
 
 ### How to add analyses
 
+(todo)
 
+### How to add sampling points
 
+(todo)
 
-
-
-## Configure Localizations
-
-
-TODO: spiegare come importare i paesi (T_WHERE)
-
-Al primo avvio su jenkins bisogna attivare il job process_queue

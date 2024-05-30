@@ -123,7 +123,9 @@ echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-- Create external Docker volumes. These volumes are defined by the `POSTGRES_VOLUME` and `JENKINS_VOLUME` variables in the `.env` file. 
+- **Create external Docker volumes**
+
+These volumes are defined by the `POSTGRES_VOLUME` and `JENKINS_VOLUME` variables in the `.env` file. 
 
 To create these volumes, run the following commands:
 
@@ -183,7 +185,7 @@ docker-compose ps
 This will display the status of all services, ensuring they are up and running. You should see output similar to this:
 
 ```bash
-ONTAINER ID   IMAGE                       COMMAND                  CREATED          STATUS         PORTS                                                                                      NAMES
+CONTAINER ID   IMAGE                       COMMAND                  CREATED          STATUS         PORTS                                                                                      NAMES
 7bb443289c48   docker-services-webserver   "catalina.sh run"        10 seconds ago   Up 8 seconds   0.0.0.0:9001->8080/tcp, :::9001->8080/tcp                                                  docker-services-webserver-1
 2476c8594e4a   postgres:12.11              "docker-entrypoint.s…"   10 seconds ago   Up 9 seconds   0.0.0.0:9002->5432/tcp, :::9002->5432/tcp                                                  docker-services-db-1
 97ad1ac9cda3   docker-services-jenkins     "/usr/bin/tini -- /u…"   10 seconds ago   Up 9 seconds   0.0.0.0:50000->50000/tcp, :::50000->50000/tcp, 0.0.0.0:9003->8080/tcp, :::9003->8080/tcp   docker-services-jenkins-1

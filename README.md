@@ -40,13 +40,15 @@ Here are the steps to install the package.
 
 ## Prerequisites
 
+A complete installation requires 300 Gigabytes of storage space.
+
 The following tools are required:
 
 | Tool          | Description   | Version Used for Testing |
 | ------------- | ------------- | ------------------------ |
 | docker        | An open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly. | 24.0.4 |
 | docker-compose| A tool for defining and managing multi-container Docker applications. It uses YAML files to configure the application's services and performs the creation and start-up process of all the containers with a single command. | 2.26.0 |
-| jdk           | The Java Development Kit (JDK) is a software development environment used for developing Java applications. It includes the Java Runtime Environment (JRE), an interpreter/loader (java), a compiler (javac), an archiver (jar), a documentation generator (javadoc), and other tools needed in Java development. | 17.0.2 |
+| jdk           | The Java Development Kit (JDK) is a software development environment used for developing Java applications. It includes the Java Runtime Environment (JRE), an interpreter/loader (java), a compiler (javac), an archiver (jar), a documentation generator (javadoc), and other tools needed in Java development. | "11.0.23" 2024-04-16 |
 | md5sum        | A computer program that calculates and verifies 128-bit MD5 hashes. It's commonly used to verify the integrity of files. | 8.30 |
 | rsync         | A fast, versatile, remote (and local) file-copying tool. It's used for copying and synchronizing files across systems. | 3.1.3 |
 | nextflow      | A reactive workflow framework and programming DSL that eases writing computational pipelines with complex data. | 22.04.5.5708 |
@@ -60,60 +62,100 @@ The following tools are required:
 To get started, you'll need to clone the project repository to your local machine. You can do this by executing the following command in your terminal:
 
 ```bash
-git clone https://github.com/genpat-it/cohesive
+$ git clone https://github.com/genpat-it/cohesive
+$ cd cohesive
 ```
 
 ## Usage
 
-1. Ensure Docker ([link](https://docs.docker.com/get-docker/)) and Docker Compose ([link](https://docs.docker.com/compose/install/)) are installed on your machine.
-2. Clone this repository and navigate to the project directory.
-3. Configure the `.env` file with the appropriate values.
-4. Run the following command to create the external volumes:
+1. Configure `.env` file
 
-```bash
-$ docker volume create cohesive-db
-$ docker volume create cohesive-jenkins
-```
+One of the values you need to set is `WEBHOOK_TOKEN`. This should be a unique and robust value. 
 
-5. generate a token:
+You can generate a robust token using the `uuidgen` tool. Here's how to do it:
 
 ```bash
 $ uuidgen
-8a8cd5a5-7983-4971-9766-7a5fa1deb00c
 ```
-and update the placeholder WEBHOOK_TOKEN in the `.env` file
 
-example:
+This command will output a UUID, like this:
 
 ```bash
-WEBHOOK_TOKEN=8a8cd5a5-7983-4971-9766-7a5fa1deb00c
+56e0740a-ea76-4440-8329-b1fb8daefe17
 ```
 
-6. Change permissions of all files and folders inside the `data` folder.
+You can then use this UUID as your `WEBHOOK_TOKEN`.
+Open `.env` file and update the placeholder.
+
+```bash
+WEBHOOK_TOKEN=56e0740a-ea76-4440-8329-b1fb8daefe17
+```
+
+**While it's possible to modify other variables, it's recommended not to do so on your first attempt.**
+
+1. Set up `jdk11` environment
+
+```bash
+wget https://builds.openlogic.com/downloadJDK/openlogic-openjdk/11.0.23+9/openlogic-openjdk-11.0.23+9-linux-x64.tar.gz
+sudo tar -xvzf openlogic-openjdk-11.0.23+9-linux-x64.tar.gz -C /opt
+sudo mv /opt/openlogic-openjdk-11.0.23+9-linux-x64/ /opt/jdk11
+echo "export JAVA_HOME=/opt/jdk11" >> ~/.bashrc
+echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> ~/.bashrc
+source ~/.bashrc
+```
+
+1. Create external Docker volumes. These volumes are defined by the `POSTGRES_VOLUME` and `JENKINS_VOLUME` variables in the `.env` file. 
+
+To create these volumes, run the following commands:
+
+```bash
+docker volume create cohesive-db
+docker volume create cohesive-jenkins
+```
+
+You can then verify that the volumes were created successfully by listing all Docker volumes and filtering for the ones you just created:
+
+```bash
+docker volume ls | grep cohesive
+```
+
+This command should output the names of the two volumes you just created.
+
+1. Modify the permissions for all files and directories within the `data` directory.
+
+This step ensures that all files and directories within `data` are readable, writable, and executable by all users. 
+
+Execute the following command in your terminal:
 
 ```bash
 $ chmod -R 777 data/*
 ```
 
-7. Build the docker
+1. Build the Docker images.
+
+This step involves using Docker Compose to build your Docker images. Docker Compose reads the `docker-compose.yml` file in the current directory and uses it to build the images.
+
+Run the following command in your terminal:
 
 ```bash
-$ docker-compose build
+$ docker compose build
 ```
 
-8. Run the `db` service first:
+1. Start the `db` service:
+
+Run the following command in your terminal:
 
 ```bash
-$ docker-compose up -d db
+$ docker compose up -d db && docker compose logs -f db
 ```
 
-9. Run the other services:
+1. Start the remaining services:
 
 ```bash
-$ docker-compose up -d
+$ docker compose up -d
 ```
 
-10. To check that all the services are running correctly, run:
+1. To check that all the services are running correctly, run:
 
 ```bash
 docker-compose ps
@@ -121,75 +163,72 @@ docker-compose ps
 
 This will display the status of all services, ensuring they are up and running. You should see output similar to this:
 
-```sh
-Name                       Command                  State           Ports         
---------------------------------------------------------------------------------
-cohesive-ext-apache-1      httpd-foreground         Up              0.0.0.0:9005->80/tcp, :::9005->80/tcp
-cohesive-ext-db-1          docker-entrypoint.sh     Up              0.0.0.0:9002->5432/tcp, :::9002->5432/tcp
-cohesive-ext-jenkins-1     /usr/bin/tini -- /u...   Up              0.0.0.0:50000->50000/tcp, :::50000->50000/tcp, 0.0.0.0:9003->8080/tcp, :::9003->8080/tcp
-cohesive-ext-webserver-1   catalina.sh run          Up              0.0.0.0:9001->8080/tcp, :::9001->8080/tcp
+```bash
+ONTAINER ID   IMAGE                       COMMAND                  CREATED          STATUS         PORTS                                                                                      NAMES
+7bb443289c48   docker-services-webserver   "catalina.sh run"        10 seconds ago   Up 8 seconds   0.0.0.0:9001->8080/tcp, :::9001->8080/tcp                                                  docker-services-webserver-1
+2476c8594e4a   postgres:12.11              "docker-entrypoint.s…"   10 seconds ago   Up 9 seconds   0.0.0.0:9002->5432/tcp, :::9002->5432/tcp                                                  docker-services-db-1
+97ad1ac9cda3   docker-services-jenkins     "/usr/bin/tini -- /u…"   10 seconds ago   Up 9 seconds   0.0.0.0:50000->50000/tcp, :::50000->50000/tcp, 0.0.0.0:9003->8080/tcp, :::9003->8080/tcp   docker-services-jenkins-1
+255fb29a759d   httpd:2.4                   "httpd-foreground"       10 seconds ago   Up 9 seconds   0.0.0.0:9005->80/tcp, :::9005->80/tcp                                                      docker-services-apache-1
 ```
 
-11. To inspect the logs of a specific service, use the following command:
+1. Download `webapps`, `db` and `tools`
 
 ```bash
-$ docker-compose logs [service] -f
+$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/webapps/ --no-check-certificate -nd -P data/webapps/ -R 'index.html*' -q
+$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/db/ --no-check-certificate -nd -P data/db/ -R 'index.html*' -q
+$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/tools/ --no-check-certificate -nd -P data/tools/ -R 'index.html*' -q
 ```
 
-12. Download `webapps`
+1. Extract `db` packages.
+The script `extract_and_cleanup.sh` extracts the packages and then deletes the compressed files.
 
 ```bash
-$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/download/public/cohesive/webapps/ --no-check-certificate -nd -P data/webapps/ -R 'index.html' -q
+$ chmod +x /data/db/extract_and_cleanup.sh 
+$ ./data/db/extract_and_cleanup.sh 
 ```
 
-13. Download databases
+1. Configure server-url for download
+
+In the `webapps\bitw2.yml` file, modify the `server-url` property to a public hostname that users can access. 
+This adjustment allows users to access downloads.
+
+Initially, we set it to localhost for testing purposes.
+
+1. Configure jenkins nodes
+
+Access Jenkins by navigating to `http://{COHESIVE_HOSTNAME}:9003`. Log in using the credentials `admin/admin`. Once logged in, click on the two nodes on the left to retrieve the command lines needed to activate the nodes.
+
+In the final section of the left column, you'll find two nodes that need to be activated:
+* `node-controller`
+* `node-worker`
+
+Select each node individually, and copy the provided command lines to activate them.
+Replace the correct secret.
 
 ```bash
-$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/download/public/cohesive/db/ --no-check-certificate -nd -P data/db/ -R 'index.html' -q
+$ cd /tmp
+$ curl -sO http://localhost:9003/jnlpJars/agent.jar
+$ screen -S jworker -d -m java -jar agent.jar -url http://localhost:9003/ -secret {secret} -name "node-worker" -workDir "/tmp"
+$ screen -S jcontroller -d -m java -jar agent.jar -url http://localhost:9003/ -secret {secret} -name "node-controller" -workDir "/tmp"
 ```
 
-Decompress each `.tar` and `.tgz` file, ensuring that the contents of each file are placed in a corresponding folder that shares the same name as the file.
+If everything has been set up correctly, you should now see the node connected in Jenkins.
 
-14. Download tools
-
-```bash
-wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/tools/ --no-check-certificate -nd -P data/tools/ -R 'index.html*' -q
-```
-
-15. Configure server-url for download
-
-In the `webapps\bitw2.yml` file, set the `server-url` property to a public hostname that is accessible to users.
-This configuration enables users to access downloads.
-
-16. Configure jenkins nodes
-    
-Entering on Jenkins at [http://localhost:9003] using the credentials admin/admin you can click on the two nodes on the left to get the command lines to activate the nodes.
-
-```bash
-echo c341c4cbbaa6565eaf1a844e8ee46c35780a1f22d7457af58af352458b5c987e > secret-file
-curl -sO http://localhost:9003/jnlpJars/agent.jar
-java -jar agent.jar -url http://localhost:9003/ -secret @secret-file -name "node-controller" -workDir "/data/jenkins_node"
-```
-
-```bash
-echo c341c4cbbaa6565eaf1a844e8ee46c35780a1f22d7457af58af352458b5c987e > secret-file
-curl -sO http://localhost:9003/jnlpJars/agent.jar
-java -jar agent.jar -url http://localhost:9003/ -secret @secret-file -name "node-controller" -workDir "/data/jenkins_node"
-```
-
-17. Share folders
+1. Share folders
 
 It's important to note that the folders:
-`work, tools, samples,  db, job_queue`
-
-should be shared between jenkins node.
+`work, tools, samples, db, job_queue`
+in the `data` folder should be shared between jenkins node.
 
 One trick might be to create symbolic links such as:
 
 ```bash
-ln -s $(pwd)/data /data
+sudo ln -s $(pwd)/data /
 ```
 
+1. Initiate the `process-queue` job in Jenkins.
+
+From the main dashboard, locate the `process-queue` row and click the play icon to start the job.
 
 ## Services
 
@@ -306,4 +345,3 @@ Configure at least two nodes. The first node is the `worker` node and the second
 ### How to add sampling points
 
 (todo)
-

@@ -194,10 +194,13 @@ CONTAINER ID   IMAGE                       COMMAND                  CREATED     
 
 - **Download `webapps`, `db` and `tools`**
 
+Please, require a temporary account (`TEMP_USERNAME` and `TEMP_USERNAME`) to bioinformatica@izs.it  
+Then you can launch:
+
 ```bash
-$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/webapps/ --no-check-certificate -nd -P data/webapps/ -R 'index.html*' -q
-$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/db/ --no-check-certificate -nd -P data/db/ -R 'index.html*' -q
-$ wget --no-parent -r https://bioinfoweb.izs.it/bioinfonas/public/cohesive/tools/ --no-check-certificate -nd -P data/tools/ -R 'index.html*' -q
+$ wget --no-parent -r https://TEMP_USERNAME:TEMP_USERNAME@bioinfoweb.izs.it/bioinfonas/public/cohesive/webapps/ --no-check-certificate -nd -P data/webapps/ -R 'index.html*' -q
+$ wget --no-parent -r https://TEMP_USERNAME:TEMP_USERNAME@bioinfoweb.izs.it/bioinfonas/public/cohesive/db/ --no-check-certificate -nd -P data/db/ -R 'index.html*' -q
+$ wget --no-parent -r https://TEMP_USERNAME:TEMP_USERNAME@bioinfoweb.izs.it/bioinfonas/public/cohesive/tools/ --no-check-certificate -nd -P data/tools/ -R 'index.html*' -q
 ```
 
 - **Extract `db` packages**

@@ -1,0 +1,9 @@
+jobs:
+  - file: /casc_config/jobdsl/post-processing.groovy
+  - file: /casc_config/jobdsl/process-import.groovy
+  - file: /casc_config/jobdsl/process-nextflow.groovy
+  - file: /casc_config/jobdsl/process-queue.groovy
+  - file: /casc_config/jobdsl/process-reference.groovy
+  - file: /casc_config/jobdsl/process-upload.groovy
+  - file: /casc_config/jobdsl/trigger-cache-refresh.groovy
+  - file: /casc_config/jobdsl/trigger-cleanup.groovy

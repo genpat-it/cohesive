@@ -1,0 +1,141 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: admin
+         password: admin
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false    
+  numExecutors: 0
+  noUsageStatistics: true
+  slaveAgentPort: ${JENKINS_AGENT_PORT}
+  globalNodeProperties:
+  - envVars:
+      env:
+      - key: "JENKINS_JOB_PROJECT"
+        value: ${JENKINS_JOB_PROJECT}
+      - key: "JENKINS_JOB_REF"
+        value: ${JENKINS_JOB_REF}"
+      - key: "NXF_VER"
+        value: "22.04.5"
+  nodes:
+  - permanent:
+      labelString: "controller"
+      launcher:
+        inbound:
+          workDirSettings:
+            disabled: false
+            failIfWorkDirIsMissing: false
+            internalDir: "remoting"
+      name: "node-controller"
+      numExecutors: 5
+      remoteFS: "/tmp"
+      retentionStrategy: "always"        
+  - permanent:
+      labelString: "worker"
+      launcher:
+        inbound:
+          workDirSettings:
+            disabled: false
+            failIfWorkDirIsMissing: false
+            internalDir: "remoting"
+      name: "node-worker"
+      numExecutors: 2
+      remoteFS: "/tmp"
+      retentionStrategy: "always"           
+security:
+  scriptApproval:
+    approvedSignatures:
+    - "method hudson.model.Node getNumExecutors"
+    - "method jenkins.model.Jenkins getNode java.lang.String"
+    - "staticMethod jenkins.model.Jenkins getInstance"
+    - "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.lang.Object"  
+credentials:
+  system:
+    domainCredentials:
+    - credentials:    
+      - usernamePassword:
+          description: "cohesive postgres db password"
+          id: "COHESIVE_POSTGRES"
+          password: "${POSTGRES_PASSWORD}"   
+          scope: GLOBAL
+          username: "postgres"
+      - string:
+          description: "token for bitw2 webhooks"
+          id: "BITW2_SERVICE_TOKEN"
+          scope: GLOBAL
+          secret: "${WEBHOOK_TOKEN}"   
+unclassified:
+  location:
+    url: http://${COHESIVE_HOSTNAME}:${JENKINS_PORT}
+  globalConfigFiles:
+    configs:
+    - json:
+        comment: "jenkins jobs configurations"
+        content: |-
+          {
+              "CONTROLLER_NODE" : "controller",
+              "DB_ADDRESS" : "${COHESIVE_HOSTNAME}:${POSTGRES_PORT}",
+              "EXECUTION_NODE": "",
+              "JOBS": {},
+              "NGSMANAGER_PROFILES" : "cohesive",
+              "NGSMANAGER_PROJECT" : "https://github.com/genpat-it/cohesive-ngsmanager.git",
+              "NGSMANAGER_REF" : "0.0.2",
+              "STATUS_UPDATE_JOB" : "post-processing",
+              "RESERVED_NODE_ROLES": "",
+              "RESERVED_NODE": "reserved",
+              "SAMPLES_FOLDER" : "/data/samples",
+              "TOOLS_FOLDER" : "/data/tools",
+              "WATCHED_DIR_INTERVAL": 20,
+              "WATCHED_DIR": "/data/job_queue",
+              "WEBHOOK_EXECUTION" : "http://${COHESIVE_HOSTNAME}:${TOMCAT_PORT}/cmdbuild/bitw2/webhooks/executions/:timestamp/status-update",
+              "WEBHOOK_BASE_URL" : "http://${COHESIVE_HOSTNAME}:${TOMCAT_PORT}/cmdbuild/bitw2/webhooks",
+              "WORKER_NODE" : "worker"
+          }
+        id: "jenkins_jobs"
+        name: "jenkins jobs configurations"
+        providerId: "org.jenkinsci.plugins.configfiles.json.JsonConfig"
+    - groovyScript:
+        content: |-
+          params {
+            hosts_dir = '/data/hosts'
+            inputdir ='/data/samples'	
+            multi_clustering__augur__traits_columns = 'province municipality'	
+            multi_clustering__reportree__summary_columns = 'CC,ST,province,category,iso_week,iso_year,first_seq_date,last_seq_date,timespan_days'	
+            multi_clustering__reportree__summary_date_aliases = 'Sampling Date|sampling_date'	
+            multi_clustering__reportree__summary_geo_column = 'municipality'
+            multi_clustering__reportree__summary_sample_column = 'sample'
+            step_2AS_filtering__seqio = '/data/db/step_2AS_filtering__seqio'
+            step_3TX_class__centrifuge__db_name = 'DBindex'
+            step_3TX_class__centrifuge__db_path = '/data/db/centrifuge'
+            step_3TX_class__kraken__db_bracken = '/data/db/bracken/minikraken_8GB_125mers_distrib.txt'
+            step_3TX_class__kraken__db_kraken = '/data/db/kraken/minikraken_20171019_8GB'
+            step_3TX_class__kraken2__db = '/data/db/kraken2'
+            step_3TX_species__blast___blastdb = '/data/db/blast'
+            step_3TX_species__kmerfinder__db = '/data/db/kmerfinder'
+            step_3TX_species__vdabricate__db = '/data/db/vdabricate'
+          }
+        id: "ngsmanager"
+        name: "nextflow profile for ngsmanager"
+        providerId: "org.jenkinsci.plugins.configfiles.groovy.GroovyScript"        
+        comment: "default setting for ngsmanager (i.e. DB paths)" 
+  priorityConfiguration:
+    jobGroups:
+    - description: "all jobs"
+      jobGroupStrategy: "allJobs"
+      priority: 10
+      priorityStrategies:
+      - priorityStrategy:
+          id: 0
+          priorityStrategy:
+            buildParameterStrategy:
+              parameterName: "PRIORITY"
+      usePriorityStrategies: true
+  prioritySorterConfiguration:
+    onlyAdminsMayEditPriorityConfiguration: false
+    strategy:
+      fQStrategy:
+        defaultPriority: 3
+        numberOfPriorities: 1000

@@ -1,0 +1,26 @@
+spring:
+  servlet:
+    multipart:
+      location: /data/work
+  jackson:
+    time-zone: ${TZ}
+  datasource:
+    password: ${POSTGRES_PASSWORD}
+app:
+  security:
+    service-token: ${WEBHOOK_TOKEN}
+  pipeline:
+    job-queue-folder: /data/job_queue
+    lock-folder:  /data/work/lock
+    trash-folder:  /data/work/trash 
+    working-folder: /data/work
+  download:
+    folder: /data/downloads
+    cmp-folder: /data/samples
+    context-path: /cmdbuild/biz/downloads
+    credential: ""
+    server-url: "http://${COHESIVE_HOSTNAME}:9001"
+  wiki:
+    server-url: http://webserver:8080
+    context-path: /wiki/user
+    base-path: /Run_analyses   

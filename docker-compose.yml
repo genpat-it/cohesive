@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:12.11
+    mem_limit: ${POSTGRES_MEMORY}
+    memswap_limit: ${POSTGRES_MEMORY}     
+    shm_size: ${POSTGRES_MEMORY_SHM}
+    restart: unless-stopped
+    stop_grace_period: 10m
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=cmdbuild
+      - TZ=${TIMEZONE}
+    volumes:
+      - cohesive-db:/var/lib/postgresql/data
+      - ${CONF_FOLDER}/postgres/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT}:5432"
+  webserver:
+    build:
+      context: ./build/tomcat
+    mem_limit: ${TOMCAT_MEMORY}
+    memswap_limit: ${TOMCAT_MEMORY}  
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - TZ=${TIMEZONE}
+      - WEBHOOK_TOKEN=${WEBHOOK_TOKEN}
+      - COHESIVE_HOSTNAME=${COHESIVE_HOSTNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ${SAMPLES_FOLDER}:/data/samples
+      - ${JOB_QUEUE_FOLDER}:/data/job_queue
+      - ${WORK_FOLDER}:/data/work
+      - ${TOOLS_FOLDER}/:/data/tools
+      - ${DOWNLOAD_FOLDER}:/data/downloads
+      - ${WEBAPPS_FOLDER}:/usr/local/tomcat/webapps
+      - ${TOMCAT_LOG_FOLDER}:/opt/cmdbuild/logs      
+      - ${CONF_FOLDER}/webapps:/conf     
+    ports:
+      - "${TOMCAT_PORT}:8080"      
+    depends_on:
+      - db
+  jenkins:
+    build:
+      context: ./build/jenkins 
+    mem_limit: ${JENKINS_MEMORY}
+    memswap_limit: ${JENKINS_MEMORY}       
+    env_file:
+      - ./.env
+    ports:
+       - "${JENKINS_PORT}:8080"
+       - "${JENKINS_AGENT_PORT}:${JENKINS_AGENT_PORT}"
+    environment:
+      - JAVA_OPTS="-Djava.awt.headless=true -Duser.timezone=${TIMEZONE} -Djenkins.install.runSetupWizard=false"
+      - CASC_JENKINS_CONFIG=/casc_config
+    restart: unless-stopped
+    volumes:
+      - cohesive-jenkins:/var/jenkins_home
+      - ${CONF_FOLDER}/jenkins:/casc_config      
+  apache:
+    image: httpd:2.4
+    mem_limit: ${APACHE_MEMORY}
+    memswap_limit: ${APACHE_MEMORY}        
+    restart: unless-stopped
+    environment:
+      - TZ=${TIMEZONE}    
+    volumes:
+      - ${SAMPLES_FOLDER}:/usr/local/apache2/htdocs/samples:ro
+      - ${SAMPLES_FOLDER}:/data/samples:ro
+      - ${WORK_FOLDER}:/usr/local/apache2/htdocs/work:ro
+      - ${WORK_FOLDER}:/data/work:ro
+      - ${DOWNLOAD_FOLDER}:/usr/local/apache2/htdocs/downloads:ro
+      - ${APACHE_LOG_FOLDER}:/logs
+      - ${CONF_FOLDER}/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    ports:
+      - "${APACHE_PORT}:80"   
+volumes:
+  cohesive-db:
+    name: ${POSTGRES_VOLUME}      
+    external: true            
+  cohesive-jenkins:
+    external: true
+    name: ${JENKINS_VOLUME}                            

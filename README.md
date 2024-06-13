@@ -2,6 +2,8 @@
 
 Please note that this version of the COHESIVE Information System (CIS) is currently under development. As such, it may be unstable and is subject to changes and improvements. We recommend using it for testing and development purposes only until a stable release is available.
 
+If you intend to utilize all the external databases, the complete installation will require almost 400 Gigabytes of storage space.
+
 # Table of Contents
 - [Disclaimer](#disclaimer)
 - [Table of Contents](#table-of-contents)
@@ -21,6 +23,7 @@ Please note that this version of the COHESIVE Information System (CIS) is curren
 - [How to contribute](#how-to-contribute)
 - [Credits](#credits)
 - [Contact](#contact)
+- [Acknowledgements](#acknowledgements)
 
 # Introduction
 
@@ -115,12 +118,21 @@ TIMEZONE=Europe/Lisbon
 - **Set up `jdk11` environment**
 
 ```bash
-wget https://builds.openlogic.com/downloadJDK/openlogic-openjdk/1-0.23+9/openlogic-openjdk-1-0.23+9-linux-x64.tar.gz
-sudo tar -xvzf openlogic-openjdk-1-0.23+9-linux-x64.tar.gz -C /opt
-sudo mv /opt/openlogic-openjdk-1-0.23+9-linux-x64/ /opt/jdk11
+wget https://builds.openlogic.com/downloadJDK/openlogic-openjdk/11.0.23+9/openlogic-openjdk-11.0.23+9-linux-x64.tar.gz
+sudo tar -xvzf openlogic-openjdk-11.0.23+9-linux-x64.tar.gz -C /opt
+sudo mv /opt/openlogic-openjdk-11.0.23+9-linux-x64/ /opt/jdk11
 echo "export JAVA_HOME=/opt/jdk11" >> ~/.bashrc
 echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> ~/.bashrc
 source ~/.bashrc
+```
+
+- **Setup `nextflow`** DSL
+
+```bash
+curl -s https://get.nextflow.io | bash
+chmod +x nextflow
+sudo mv nextflow /usr/local/bin
+export NXF_VER=20.10.0
 ```
 
 - **Create external Docker volumes**
@@ -179,7 +191,7 @@ $ docker compose up -d
 To check that all the services are running correctly, run:
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 This will display the status of all services, ensuring they are up and running. You should see output similar to this:
@@ -206,8 +218,9 @@ $ wget --no-parent -r https://<username>:<password>@bioinfoweb.izs.it/cohesive/t
 The script `extract_and_cleanup.sh` extracts the packages and then deletes the compressed files.
 
 ```bash
-$ chmod +x /data/db/extract_and_cleanup.sh 
-$ ./data/db/extract_and_cleanup.sh 
+cd data/db
+chmod +x extract_and_cleanup.sh
+./extract_and_cleanup.sh
 ```
 
 - **Configure server-url for download**
@@ -279,12 +292,12 @@ For further customization, modify the `docker-compose.yml` file and adjust the e
 
 **Note**: Replace `localhost` with the appropriate hostname or IP address if you are accessing the services from a different network.
 
-To check the status of all the services, you can use the `docker-compose ps` command in the terminal. This command will list all the running services along with their current state. If you want to check the logs of a specific service, you can use the `docker-compose logs <service_name>` command. Remember to replace `<service_name>` with the name of the service you want to check.
+To check the status of all the services, you can use the `docker compose ps` command in the terminal. This command will list all the running services along with their current state. If you want to check the logs of a specific service, you can use the `docker compose logs <service_name>` command. Remember to replace `<service_name>` with the name of the service you want to check.
 
 For example, to check the logs of the `db` service, you can use the following command:
 
 ```bash
-$ docker-compose logs db
+$ docker compose logs db
 ```
 
 This will display the logs for the `db` service, which can be useful for debugging or monitoring the service's activity.
@@ -328,3 +341,9 @@ This package is developed by GENPAT (the Italian National Reference Centre for W
 # Contact
 
 For any inquiries or support, feel free to reach out to us at [cohesive@izs.it](mailto:cohesive@izs.it).
+
+## Acknowledgements
+
+We would like to express our gratitude to those who are contributing to the testing and improvement of this package. 
+
+A special thanks to Daniel Sobral from the [Instituto Nacional de Saúde Doutor Ricardo Jorge (INSA)](https://www.insa.min-saude.pt/). His valuable feedback and suggestions are greatly helping in enhancing the quality of our work.

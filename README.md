@@ -268,6 +268,13 @@ A useful technique could be to create symbolic links. For example:
 sudo ln -s $(pwd)/data /
 ```
 
+> **⚠️ Note for macOS Users**  
+> On macOS systems, it is **not possible** to create a symbolic link directly under the root `/` directory due to operating system restrictions.  
+>
+> Therefore, to share the `data` folder between Jenkins nodes or other services, you need to mount the `./data` directory elsewhere.
+
+
+
 - **Start the `process-queue` Job in Jenkins**
 
 On the Jenkins main dashboard, find the `process-queue` job. Click the play icon in its row to initiate the job.

@@ -16,6 +16,7 @@ services:
       - ${CONF_FOLDER}/postgres/initdb:/docker-entrypoint-initdb.d
     ports:
       - "${POSTGRES_PORT}:5432"
+    entrypoint: ["/bin/sh", "-c", "chmod +x /docker-entrypoint-initdb.d/init.sh && docker-entrypoint.sh postgres"]
   webserver:
     build:
       context: ./build/tomcat
